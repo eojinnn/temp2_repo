@@ -43,10 +43,6 @@ def main(args):
     logging.basicConfig(filename=args['result']['log_output_path'], filemode='w', level=logging.INFO, format='%(levelname)s: %(asctime)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
     logger = logging.getLogger(__name__)
     logger.info(args)
-    
-    print(f"\n[DEBUG] Config Name: {input_args.config_name}") # input_args를 main으로 넘겨야 함 (구조상 어렵다면 아래 것만)
-    print(f"[DEBUG] Pre-train Status: {args['model']['pre-train']}")
-    print(f"[DEBUG] Loading From: {args['model']['pre-train_model']}\n")
 
     if args['model']['in_channel']==10:
         data_process_fn = process_mic_input_sed_doa_labels

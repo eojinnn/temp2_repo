@@ -134,14 +134,15 @@ class SincConv_fast(nn.Module):
         # self.window_ = 0.54-0.46*torch.cos(2*math.pi*n_lin/self.kernel_size)
 
         # (1, kernel_size/2)
-        n_ = 2 * math.pi * torch.arange(- (self.kernel_size - 1) / 2.0,
-                                        (self.kernel_size - 1) / 2.0 + 1).view(1, -1) / self.sample_rate
+        n_ = 2 * math.pi * torch.arange(- (self.kernel_size - 1) / 2.0, 0).view(1, -1) / self.sample_rate
         self.register_buffer('n_', n_)
 
         # [NGCC 매칭 수정] periodic=False 설정 (Symmetric Window)
         # FIR 필터 설계에서는 좌우 대칭인 윈도우가 필요합니다.
         # 기본값(True)을 쓰면 비대칭이라 위상 왜곡이 생길 수 있습니다.
-        window_ = torch.hamming_window(self.kernel_size, periodic=False)
+        n_lin = torch.linspace(0, (self.kernel_size/2)-1,
+                               steps=int((self.kernel_size/2)))
+        window_ = 0.54-0.46*torch.cos(2*math.pi*n_lin/self.kernel_size)
         self.register_buffer('window_', window_)
 
     def forward(self, waveforms):

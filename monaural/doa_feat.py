@@ -118,16 +118,13 @@ class SalsaliteEncoder(nn.Module):
 # 2. GCC-PHAT Module (PyTorch Implementation of provided NumPy code)
 # ==============================================================================
 class GCCPHATEncoder(nn.Module):
-    def __init__(self, params):
+    def __init__(self, params, win_len=480):
         super().__init__()
         
         self.fs = params['fs']
         self.nb_mel_bins = params['nb_mel_bins'] # 보통 64
-        
-        # 데이터 로더에서 넘어오는 윈도우 크기 (1023)
-        # FFT를 위해 2의 제곱수인 1024로 설정
-        self.win_len = 1023 
-        self.nfft = 1024 
+        self.win_len = win_len
+        self.nfft = 512
         
         # 4채널 마이크의 가능한 모든 쌍 (6개)
         # (0,1), (0,2), (0,3), (1,2), (1,3), (2,3)

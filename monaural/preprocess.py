@@ -36,7 +36,7 @@ class ResnetConformer_2026(nn.Module):
         }
         self.encoder = SincNet(sincnet_params)
         
-        self.aux_feat = GCCPHATEncoder(params=params)
+        self.aux_feat = GCCPHATEncoder(params=params, win_len=sig_len)
         # self.aux_feat = SalsaliteEncoder(params=params)
         
         # --- C. Backbone Setup ---
@@ -84,9 +84,8 @@ class ResnetConformer_2026(nn.Module):
             return time.time()
         """
         x: Framed Audio Input from Dataset_loader
-           Shape: (Batch, Channel, Time, Window_Len) -> (B, 4, 500, 1023)
+           Shape: (Batch, Channel, Time, Window_Len) -> (B, 4, 250, 480)
         """
-        print(x.shape)
         B, C, T, W = x.shape
 
         t_before= time.time()
@@ -102,7 +101,6 @@ class ResnetConformer_2026(nn.Module):
         # (B*C*T, F) -> (B, C, T, F)
         _, C_sinc, T_sinc = sinc_feat_pooled.shape
         sinc_feat = sinc_feat_pooled.reshape(B, C, C_sinc, T_sinc)
-        sinc_feat = sinc_feat.permute(0, 1, 3, 2)
         # ResNet에 넣기 위해 (B, Channel, Time, Freq) 형태로 변환해야 함
         # 현재 T_sinc(7500)는 너무 길고, ResNet은 2D 이미지를 원함.
         # NGCC는 이 시점에서 GCC를 구하거나 Pooling을 더 함.
@@ -111,12 +109,11 @@ class ResnetConformer_2026(nn.Module):
 
         # GCC: (B, 6, Time, Freq)
         gcc_feat = self.aux_feat(x)
-        print('gcc shape:', gcc_feat.shape)
-        print('sinc shape:', sinc_feat_pooled.shape)
+
         t2 = sync_time()
 
         features = torch.cat([sinc_feat, gcc_feat], dim=1)
-        features = features.permute(0, 1, 3, 2)  # (B, 10, 500, 64)
+        features = features.permute(0, 1, 3, 2)  # (B, 10, 64,250)
         # 2. Backbone Forward
         conv_outputs = self.resnet(features)
 
