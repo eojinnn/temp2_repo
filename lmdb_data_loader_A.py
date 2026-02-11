@@ -18,6 +18,7 @@ class LmdbDataset(Dataset):
         self.segment_len = segment_len
         self.data_process_fn = data_process_fn
         #self.visial_tools = VisualTools()
+        self.lmdb_dir = lmdb_dir
         self.keys = []
         with open(os.path.join(lmdb_dir, 'keys.txt'), 'r') as f:
             lines = f.readlines()
@@ -26,37 +27,59 @@ class LmdbDataset(Dataset):
                     continue
                 if int(k[4]) in self.split: # check which split the file belongs to
                     self.keys.append(k.strip())
-        self.env = lmdb.open(lmdb_dir, readonly=True, readahead=True, lock=False)
+        # self.env = lmdb.open(lmdb_dir, readonly=True, readahead=True, lock=False)
+        self.env = None
         self.spec_scaler = None
         if normalized_features_wts_file is not None:
             self.spec_scaler = joblib.load(normalized_features_wts_file)
-        
+    
+    def _get_env(self):
+        if self.env is None:
+            self.env = lmdb.open(
+                self.lmdb_dir,
+                readonly=True,
+                lock=False,
+                readahead=True,
+                meminit=False
+            )
+        return self.env
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d["env"] = None  # pickle할 때 env 제거
+        return d
+       
     def __len__(self):
         return len(self.keys)
 
     def __getitem__(self, index):
-        txn = self.env.begin()
-        with txn.cursor() as cursor:
-            k = self.keys[index].strip().encode()
-            cursor.set_key(k)
-            datum=SimpleDatum()
-            datum.ParseFromString(cursor.value())
-            data = np.frombuffer(datum.data, dtype=np.float32).reshape(-1, datum.data_dim)
-            if self.spec_scaler is not None:
-                data = self.spec_scaler.transform(data)
-            #pdb.set_trace()
-            label = np.frombuffer(datum.label, dtype=np.float32).reshape(-1, datum.label_dim)
+        # txn = self.env.begin()
+        # with txn.cursor() as cursor:
+        #     k = self.keys[index].strip().encode()
+        #     cursor.set_key(k)
+        env = self._get_env()
+        k = self.keys[index].encode()
 
-            wav_name = datum.wave_name.decode()
-            if self.segment_len is not None and label.shape[0] < self.segment_len:
-                data = np.pad(data, pad_width=((0,self.segment_len*5-data.shape[0]), (0,0)))
-                label = np.pad(label, pad_width=((0,self.segment_len-label.shape[0]), (0,0)))
-            if self.data_process_fn is not None:
-                data, label = self.data_process_fn(data, label)
+        with env.begin(write=False) as txn:
+            buf = txn.get(k)
+        datum=SimpleDatum()
+        datum.ParseFromString(buf) #cursor.value()
+        data = np.frombuffer(datum.data, dtype=np.float32).reshape(-1, datum.data_dim)
+        if self.spec_scaler is not None:
+            data = self.spec_scaler.transform(data)
+        #pdb.set_trace()
+        label = np.frombuffer(datum.label, dtype=np.float32).reshape(-1, datum.label_dim)
 
-            #print('feat {}'.format(data.shape))
-            #print('label {}'.format(label.shape))
-            #print('wavname {}'.format(wav_name))
+        wav_name = datum.wave_name.decode()
+        if self.segment_len is not None and label.shape[0] < self.segment_len:
+            data = np.pad(data, pad_width=((0,self.segment_len*5-data.shape[0]), (0,0)))
+            label = np.pad(label, pad_width=((0,self.segment_len-label.shape[0]), (0,0)))
+        if self.data_process_fn is not None:
+            data, label = self.data_process_fn(data, label)
+
+        #print('feat {}'.format(data.shape))
+        #print('label {}'.format(label.shape))
+        #print('wavname {}'.format(wav_name))
         return {'data': data, 'label':label, 'wav_name':wav_name}
 
 
@@ -91,44 +114,67 @@ class LmdbDataset_seddoa_sedsde(Dataset):
                     continue
                 if int(k[4]) in self.split: # check which split the file belongs to
                     self.keys.append(k.strip())
-        self.env = lmdb.open(lmdb_dir, readonly=True, readahead=True, lock=False)
+        # self.env = lmdb.open(lmdb_dir, readonly=True, readahead=True, lock=False)
+        self.env = None
+        self.lmdb_dir = lmdb_dir
         self.seddoa_spec_scaler = None
         self.sedsde_spec_scaler = None
         if seddoa_normalized_features_wts_file is not None:
             self.seddoa_spec_scaler = joblib.load(seddoa_normalized_features_wts_file)
         if sedsde_normalized_features_wts_file is not None:
             self.sedsde_spec_scaler = joblib.load(sedsde_normalized_features_wts_file)
-        
+    
+    def _get_env(self):
+        if self.env is None:
+            self.env = lmdb.open(
+                self.lmdb_dir,
+                readonly=True,
+                lock=False,
+                readahead=True,
+                meminit=False
+            )
+        return self.env
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d["env"] = None  # pickle할 때 env 제거
+        return d
+    
     def __len__(self):
         return len(self.keys)
 
     def __getitem__(self, index):
-        txn = self.env.begin()
-        with txn.cursor() as cursor:
-            k = self.keys[index].strip().encode()
-            cursor.set_key(k)
-            datum=SimpleDatum()
-            datum.ParseFromString(cursor.value())
-            data = np.frombuffer(datum.data, dtype=np.float32).reshape(-1, datum.data_dim)
-            if self.seddoa_spec_scaler is not None:
-                seddoa_data = self.seddoa_spec_scaler.transform(data)
-            if self.sedsde_spec_scaler is not None:
-                sedsde_data = self.sedsde_spec_scaler.transform(data)
-            #pdb.set_trace()
-            label = np.frombuffer(datum.label, dtype=np.float32).reshape(-1, datum.label_dim)
+        # txn = self.env.begin()
+        # with txn.cursor() as cursor:
+        #     k = self.keys[index].strip().encode()
+        #     cursor.set_key(k)
+        env = self._get_env()
+        k = self.keys[index].encode()
 
-            wav_name = datum.wave_name.decode()
-            if self.segment_len is not None and label.shape[0] < self.segment_len:
-                seddoa_data = np.pad(seddoa_data, pad_width=((0,self.segment_len*5-data.shape[0]), (0,0)))
-                sedsde_data = np.pad(sedsde_data, pad_width=((0,self.segment_len*5-data.shape[0]), (0,0)))
-                label = np.pad(label, pad_width=((0,self.segment_len-label.shape[0]), (0,0)))
-            if self.data_process_fn is not None:
-                seddoa_data, label1 = self.data_process_fn(seddoa_data, label)
-                sedsde_data, label2 = self.data_process_fn(sedsde_data, label)
+        with env.begin(write=False) as txn:
+            buf = txn.get(k)
+        datum=SimpleDatum()
+        datum.ParseFromString(buf) #cursor.value()
+        data = np.frombuffer(datum.data, dtype=np.float32).reshape(-1, datum.data_dim)
+        if self.seddoa_spec_scaler is not None:
+            seddoa_data = self.seddoa_spec_scaler.transform(data)
+        if self.sedsde_spec_scaler is not None:
+            sedsde_data = self.sedsde_spec_scaler.transform(data)
+        #pdb.set_trace()
+        label = np.frombuffer(datum.label, dtype=np.float32).reshape(-1, datum.label_dim)
 
-            #print('feat {}'.format(data.shape))
-            #print('label {}'.format(label.shape))
-            #print('wavname {}'.format(wav_name))
+        wav_name = datum.wave_name.decode()
+        if self.segment_len is not None and label.shape[0] < self.segment_len:
+            seddoa_data = np.pad(seddoa_data, pad_width=((0,self.segment_len*5-data.shape[0]), (0,0)))
+            sedsde_data = np.pad(sedsde_data, pad_width=((0,self.segment_len*5-data.shape[0]), (0,0)))
+            label = np.pad(label, pad_width=((0,self.segment_len-label.shape[0]), (0,0)))
+        if self.data_process_fn is not None:
+            seddoa_data, label1 = self.data_process_fn(seddoa_data, label)
+            sedsde_data, label2 = self.data_process_fn(sedsde_data, label)
+
+        #print('feat {}'.format(data.shape))
+        #print('label {}'.format(label.shape))
+        #print('wavname {}'.format(wav_name))
         return {'seddoa_data': seddoa_data, 'sedsde_data':sedsde_data, 'label':label1, 'wav_name':wav_name}
 
 
@@ -164,27 +210,50 @@ class LmdbDataset_eval(Dataset):
                 if self.ignore is not None and self.ignore in k:
                     continue
                 self.keys.append(k.strip())
-        self.env = lmdb.open(lmdb_dir, readonly=True, readahead=True, lock=False)
+        # self.env = lmdb.open(lmdb_dir, readonly=True, readahead=True, lock=False)
+        self.env = None
+        self.lmdb_dir = lmdb_dir
         self.spec_scaler = None
         if normalized_features_wts_file is not None:
             self.spec_scaler = joblib.load(normalized_features_wts_file)
-        
+    
+    def _get_env(self):
+        if self.env is None:
+            self.env = lmdb.open(
+                self.lmdb_dir,
+                readonly=True,
+                lock=False,
+                readahead=True,
+                meminit=False
+            )
+        return self.env
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d["env"] = None  # pickle할 때 env 제거
+        return d
+
     def __len__(self):
         return len(self.keys)
 
     def __getitem__(self, index):
-        txn = self.env.begin()
-        with txn.cursor() as cursor:
-            k = self.keys[index].strip().encode()
-            cursor.set_key(k)
-            datum=SimpleDatum()
-            datum.ParseFromString(cursor.value())
-            data = np.frombuffer(datum.data, dtype=np.float32).reshape(-1, datum.data_dim)
-            if self.spec_scaler is not None:
-                data = self.spec_scaler.transform(data)
-            if self.data_process_fn is not None:
-                data = self.data_process_fn(data)
-            wav_name = datum.wave_name.decode()
+        # txn = self.env.begin()
+        # with txn.cursor() as cursor:
+        #     k = self.keys[index].strip().encode()
+        #     cursor.set_key(k)
+        env = self._get_env()
+        k = self.keys[index].encode()
+
+        with env.begin(write=False) as txn:
+            buf = txn.get(k)
+        datum=SimpleDatum()
+        datum.ParseFromString(buf) #cursor.value()
+        data = np.frombuffer(datum.data, dtype=np.float32).reshape(-1, datum.data_dim)
+        if self.spec_scaler is not None:
+            data = self.spec_scaler.transform(data)
+        if self.data_process_fn is not None:
+            data = self.data_process_fn(data)
+        wav_name = datum.wave_name.decode()
         return {'data': data, 'wav_name':wav_name}
 
     def collater(self, samples):

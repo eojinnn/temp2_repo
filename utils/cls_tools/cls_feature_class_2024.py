@@ -16,7 +16,7 @@ import shutil
 import math
 import wave
 import contextlib
-import cv2
+# import cv2
 
 
 
@@ -470,53 +470,53 @@ class FeatureClass:
                 np.save(os.path.join(self._label_dir, '{}.npy'.format(wav_filename.split('.')[0])), label_mat)
 
     # ------------------------------- EXTRACT VISUAL FEATURES AND PREPROCESS IT -------------------------------
-    @staticmethod
-    def _read_vid_frames(vid_filename):
-        cap = cv2.VideoCapture(vid_filename)
-        pil_frames = []
-        frame_cnt = 0
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            if frame_cnt % 3 == 0:
-                resized_frame = cv2.resize(frame, (360, 180))
-                frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
-                pil_frame = Image.fromarray(frame_rgb)
-                pil_frames.append(pil_frame)
-            frame_cnt += 1
-        cap.release()
-        cv2.destroyAllWindows()
+    # @staticmethod
+    # def _read_vid_frames(vid_filename):
+    #     cap = cv2.VideoCapture(vid_filename)
+    #     pil_frames = []
+    #     frame_cnt = 0
+    #     while True:
+    #         ret, frame = cap.read()
+    #         if not ret:
+    #             break
+    #         if frame_cnt % 3 == 0:
+    #             resized_frame = cv2.resize(frame, (360, 180))
+    #             frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
+    #             pil_frame = Image.fromarray(frame_rgb)
+    #             pil_frames.append(pil_frame)
+    #         frame_cnt += 1
+    #     cap.release()
+    #     cv2.destroyAllWindows()
 
-        return pil_frames
+    #     return pil_frames
 
-    def extract_file_vid_feature(self, _arg_in):
-        _file_cnt, _mp4_path, _vid_feat_path = _arg_in
-        vid_feat = None
+    # def extract_file_vid_feature(self, _arg_in):
+    #     _file_cnt, _mp4_path, _vid_feat_path = _arg_in
+    #     vid_feat = None
 
-        vid_frames = self._read_vid_frames(_mp4_path)
-        pretrained_vid_model = VideoFeatures()
-        vid_feat = pretrained_vid_model(vid_frames)
-        vid_feat = np.array(vid_feat)
+    #     vid_frames = self._read_vid_frames(_mp4_path)
+    #     pretrained_vid_model = VideoFeatures()
+    #     vid_feat = pretrained_vid_model(vid_frames)
+    #     vid_feat = np.array(vid_feat)
 
-        if vid_feat is not None:
-            print('{}: {}, {}'.format(_file_cnt, os.path.basename(_mp4_path), vid_feat.shape))
-            np.save(_vid_feat_path, vid_feat)
+    #     if vid_feat is not None:
+    #         print('{}: {}, {}'.format(_file_cnt, os.path.basename(_mp4_path), vid_feat.shape))
+    #         np.save(_vid_feat_path, vid_feat)
 
-    def extract_visual_features(self):
-        self._vid_feat_dir = self.get_vid_feat_dir()
-        create_folder(self._vid_feat_dir)
-        print('Extracting visual features:')
-        print('\t\t vid_dir {} \n\t\t vid_feat_dir {}'.format(
-            self._vid_dir, self._vid_feat_dir))
-        for sub_folder in os.listdir(self._vid_dir):
-            loc_vid_folder = os.path.join(self._vid_dir, sub_folder)
-            for file_cnt, file_name in enumerate(os.listdir(loc_vid_folder)):
-                print(file_name)
-                mp4_filename = '{}.mp4'.format(file_name.split('.')[0])
-                mp4_path = os.path.join(loc_vid_folder, mp4_filename)
-                vid_feat_path = os.path.join(self._vid_feat_dir, '{}.npy'.format(mp4_filename.split('.')[0]))
-                self.extract_file_vid_feature((file_cnt, mp4_path, vid_feat_path))
+    # def extract_visual_features(self):
+    #     self._vid_feat_dir = self.get_vid_feat_dir()
+    #     create_folder(self._vid_feat_dir)
+    #     print('Extracting visual features:')
+    #     print('\t\t vid_dir {} \n\t\t vid_feat_dir {}'.format(
+    #         self._vid_dir, self._vid_feat_dir))
+    #     for sub_folder in os.listdir(self._vid_dir):
+    #         loc_vid_folder = os.path.join(self._vid_dir, sub_folder)
+    #         for file_cnt, file_name in enumerate(os.listdir(loc_vid_folder)):
+    #             print(file_name)
+    #             mp4_filename = '{}.mp4'.format(file_name.split('.')[0])
+    #             mp4_path = os.path.join(loc_vid_folder, mp4_filename)
+    #             vid_feat_path = os.path.join(self._vid_feat_dir, '{}.npy'.format(mp4_filename.split('.')[0]))
+    #             self.extract_file_vid_feature((file_cnt, mp4_path, vid_feat_path))
 
     # -------------------------------  DCASE OUTPUT  FORMAT FUNCTIONS -------------------------------
     def load_output_format_file(self, _output_format_file, cm2m=False):  # TODO: Reconsider cm2m conversion

@@ -1,0 +1,33 @@
+data:
+  train_label_dir: './data/feature_labels_2023/mic_dev_label'
+  test_label_dir: './data/feature_labels_2023/mic_dev_label'
+  ref_files_dir: '/home/moadata/interspeech2026/2024DCASE_data/metadata_dev'
+  keys_file: './data/feature_labels_2023/lmdb_synthdata_len10s/keys.txt'
+  segment_len: 100
+  batch_size: 16
+  train_ignore: 'enh' # or None. 'enh' means ignore the enhancement data
+  test_ignore: 'enh'
+
+model:
+  type: 'seddoa_nopool_2023'
+  # criterion: 'BCE+MSPE'
+  loss_weight: [0.1, 1.0]
+  in_channel: 10              #7
+  in_dim: 32                  #382
+  out_dim: 39
+  # 'early_manifold'
+  pre-train: False
+  pre-train_model: '...'
+
+train:
+  train_num_workers: 4
+  test_num_workers: 4
+  lr: 0.001
+  nb_steps: 100000
+
+result:
+  log_output_path: './output/DOA_proposed_3/train.log'
+  model_output_dir: './output/DOA_proposed_3/model'
+  log_interval: 100
+  checkpoint_output_dir: './output/DOA_proposed_3/checkpoints'
+  dcase_output_dir: './output/DOA_proposed_3/results'

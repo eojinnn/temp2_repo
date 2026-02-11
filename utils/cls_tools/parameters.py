@@ -15,15 +15,15 @@ def get_params(argv='1'):
 
         # INPUT PATH
         # dataset_dir='DCASE2020_SELD_dataset/',  # Base folder containing the foa/mic and metadata folders
-        dataset_dir = '...',
+        dataset_dir = 'F:/interspeech2026/2024DCASE_data/',
 
         # OUTPUT PATHS
         # feat_label_dir='DCASE2020_SELD_dataset/feat_label_hnet/',  # Directory to dump extracted features and labels
-        feat_label_dir = '...',
+        feat_label_dir = './data/feature_labels_2023',
 
         # DATASET LOADING PARAMETERS
         mode='dev',         # 'dev' - development or 'eval' - evaluation dataset
-        dataset='foa',       # 'foa' - ambisonic or 'mic' - microphone signals
+        dataset='mic',       # 'foa' - ambisonic or 'mic' - microphone signals
 
         #FEATURE PARAMS
         fs=24000,
@@ -31,6 +31,7 @@ def get_params(argv='1'):
         label_hop_len_s=0.1,
         # max_audio_len_s=60,
         nb_mel_bins=64,
+        label_sequence_length=50,
 
         use_salsalite = False, # Used for MIC dataset only. If true use salsalite features, else use GCC features
         fmin_doa_salsalite = 50,

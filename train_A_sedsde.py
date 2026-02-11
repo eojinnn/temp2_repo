@@ -26,7 +26,6 @@ def set_random_seed(seed):
     return None
 
 def main(args):
-    # 设置log
     log_output_folder = os.path.dirname(args['result']['log_output_path'])
     os.makedirs(log_output_folder, exist_ok=True)
     logging.basicConfig(filename=args['result']['log_output_path'], filemode='w', level=logging.INFO, format='%(levelname)s: %(asctime)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
@@ -45,7 +44,6 @@ def main(args):
     elif args['model']['criterion'] == 'BCE+MSAE':
         criterion = SedDistLoss_2024_MAPE(loss_weight = args['model']['loss_weight'])
 
-    # 训练集初始化
     train_split = [1,2,3]
     train_dataset = LmdbDataset(args['data']['train_lmdb_dir'], train_split, normalized_features_wts_file=args['data']['norm_file'],
                                 ignore=args['data']['train_ignore'], segment_len=args['data']['segment_len'], data_process_fn=data_process_fn)
@@ -54,7 +52,6 @@ def main(args):
         num_workers=args['train']['train_num_workers'], collate_fn=train_dataset.collater
     )
 
-    # 测试集初始化
     test_split = [4]
     test_dataset = LmdbDataset(args['data']['test_lmdb_dir'], test_split, normalized_features_wts_file=args['data']['norm_file'],
                                 ignore=args['data']['test_ignore'], segment_len=args['data']['segment_len'], data_process_fn=data_process_fn)

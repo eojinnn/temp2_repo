@@ -3,3 +3,14 @@
 *_key.pub
 *.pem
 *.key
+
+# folders to exclude
+data/
+output/
+__pycache__/
+
+# python cache anywhere
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd

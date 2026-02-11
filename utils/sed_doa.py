@@ -12,6 +12,13 @@ def process_foa_input_sed_doa_labels(feat, label):
     feat = np.transpose(feat, (1, 0, 2))
     return feat, label
 
+def process_mic_input_sed_doa_labels(feat, label):
+    mel_bins = 64
+    nb_ch = 10
+    feat = feat.reshape(feat.shape[0], nb_ch, mel_bins)
+    feat = np.transpose(feat, (1, 0, 2))
+    return feat, label
+
 def process_foa_input_sed_doa(feat):
     mel_bins = 64
     nb_ch = 7
@@ -227,7 +234,7 @@ class SedResult():
 class SedDoaLoss(nn.Module):
     def __init__(self, loss_weight=[1.0, 10.0]):
         super().__init__()
-        self.criterion_sed = nn.BCELoss()
+        self.criterion_sed = nn.BCEWithLogitsLoss()
         self.criterion_doa = nn.MSELoss()
         self.loss_weight = loss_weight
     

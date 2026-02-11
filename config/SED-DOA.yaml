@@ -1,8 +1,8 @@
 data:
   train_lmdb_dir: './data/feature_labels_2023/lmdb_synthdata_len10s'
   test_lmdb_dir: './data/feature_labels_2023/lmdb_synthdata_len10s'
-  ref_files_dir: '/home/work/KEJ/2024DCASE_data/metadata_dev' # label files
-  norm_file: './test_models/foa_wts' # normalization file
+  ref_files_dir: 'D:/interspeech2026/2024DCASE_data/metadata_dev' # label files
+  norm_file: './data/feature_labels_2023/mic_wts' # normalization file
   segment_len: 100 
   batch_size: 32
   train_ignore: 'enh' # or None. 'enh' means ignore the enhancement data
@@ -12,12 +12,12 @@ model:
   type: 'seddoa_nopool_2023'
   # criterion: 'BCE+MSPE'
   loss_weight: [0.1, 1.0]
-  in_channel: 7
+  in_channel: 10
   in_dim: 64
   out_dim: 39
   # 'early_manifold'
   pre-train: False
-  pre-train_model: '...'
+  pre-train_model: # '/home/work/KEJ/Solution_on_3D_SELD/output/SED-DOA_FOA/checkpoints/checkpoint_epoch360_step98280.pth'
 
 train:
   train_num_workers: 8
@@ -26,7 +26,7 @@ train:
   nb_steps: 100000
 
 result:
-  log_output_path: './output/A_RC_SED-SDE/train.log'
+  log_output_path: './output/SED-DOA_FOA/train.log'
   log_interval: 100
-  checkpoint_output_dir: './output/A_RC_SED-SDE/checkpoints'
-  dcase_output_dir: './output/A_RC_SED-SDE/results'
+  checkpoint_output_dir: './output/SED-DOA_FOA/checkpoints'
+  dcase_output_dir: './output/SED-DOA_FOA/results'
