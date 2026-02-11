@@ -43,6 +43,10 @@ def main(args):
     logging.basicConfig(filename=args['result']['log_output_path'], filemode='w', level=logging.INFO, format='%(levelname)s: %(asctime)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
     logger = logging.getLogger(__name__)
     logger.info(args)
+    
+    print(f"\n[DEBUG] Config Name: {input_args.config_name}") # input_args를 main으로 넘겨야 함 (구조상 어렵다면 아래 것만)
+    print(f"[DEBUG] Pre-train Status: {args['model']['pre-train']}")
+    print(f"[DEBUG] Loading From: {args['model']['pre-train_model']}\n")
 
     if args['model']['in_channel']==10:
         data_process_fn = process_mic_input_sed_doa_labels
@@ -52,9 +56,8 @@ def main(args):
     criterion = SedDoaLoss(loss_weight=[0.1,1])
 
     segment_len = args['data']['segment_len']
-    cal_sig_len = segment_len * 2400
     # model = ResnetConformer_seddoa_nopool_2026(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'])
-    model = ResnetConformer_2026(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'],sig_len=cal_sig_len, params=params)
+    model = ResnetConformer_2026(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'], params=params)
 
 
     train_split = [1,2,3,5,6]
@@ -181,8 +184,8 @@ def main(args):
         logger.info('epoch: {}, step: {}/{}, train_time:{:.2f}, test_time:{:.2f}, average_train_loss:{:.4f}, average_test_loss:{:.4f}'.format(epoch_count, step_count, total_steps, train_time, test_time, np.mean(train_loss), np.mean(test_loss)))
         logger.info('ER/F/LE/LR/SELD: {}'.format('{:0.4f}/{:0.4f}/{:0.4f}/{:0.4f}/{:0.4f}'.format(val_ER, val_F, val_LE, val_LR, val_seld_scr)))
 
-        checkpoint_output_dir = args['result']['checkpoint_output_dir']
-        os.makedirs(checkpoint_output_dir, exist_ok=True)
+        # checkpoint_output_dir = args['result']['checkpoint_output_dir']
+        # os.makedirs(checkpoint_output_dir, exist_ok=True)
 
         model_output_dir = args['result']['model_output_dir']
         os.makedirs(model_output_dir, exist_ok=True)
@@ -193,9 +196,9 @@ def main(args):
             torch.save(model.state_dict(), best_model_path)
             logger.info('Found new best model with SELD score: {:.4f}. Saved to {}'.format(best_seld_scr, best_model_path))
 
-        model_path = os.path.join(checkpoint_output_dir, 'checkpoint_epoch{}_step{}.pth'.format(epoch_count, step_count))
-        torch.save(model.state_dict(), model_path)
-        logger.info('save checkpoint: {}'.format(model_path))
+        # model_path = os.path.join(checkpoint_output_dir, 'checkpoint_epoch{}_step{}.pth'.format(epoch_count, step_count))
+        # torch.save(model.state_dict(), model_path)
+        # logger.info('save checkpoint: {}'.format(model_path))
 
 
 if __name__ == "__main__":

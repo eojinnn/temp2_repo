@@ -13,7 +13,7 @@ model:
   # criterion: 'BCE+MSPE'
   loss_weight: [0.1, 1.0]
   in_channel: 10              #7
-  in_dim: 32                  #382
+  in_dim: 64                  #382
   out_dim: 39
   # 'early_manifold'
   pre-train: False
